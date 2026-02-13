@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: front_bot
+    expose:
+      - "80"
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_MINIO_API_URL=${NEXT_PUBLIC_MINIO_API_URL:-http://192.168.100.30/api/minio/upload}
+      - N8N_WEBHOOK_GET=${N8N_WEBHOOK_GET:-https://n8n.avtopark1.kz:8443/webhook/tg-from-gateway_get}
+      - N8N_WEBHOOK_POST=${N8N_WEBHOOK_POST:-https://n8n.avtopark1.kz:8443/webhook/tg-from-gateway}
+      - N8N_WEBHOOK_TOKEN=${N8N_WEBHOOK_TOKEN:-ew0KImFsZyI6ICJIUzI1NiIsDQoidHlwIjogIkpXVCINCn0.ew0KImF1ZCI6ICJ1YXQiLA0KInRva2VuX3R5cGUiOiAiYWNjZXNzIiwNCiJuYmYiOiAxNzY0MzY0NTkwLA0KInN1YiI6ICLQmNC90YLQtdCz0YDQsNGG0LjRj9Ci0LXQu9C10LPRgNCw0LwiLA0KImV4cCI6IDExNzY0MzY0NTg5LA0KImlhdCI6IDE3NjQzNjQ1OTAsDQoiaXNzIjogInNzbCINCn0.5uzkBxAaZ0G_UeloEevHa_h1N3iUPVPsJcluCOGCFpM}
+    networks:
+      - front_bot_network
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx_proxy
+    ports:
+      - "8081:8081"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    restart: unless-stopped
+    depends_on:
+      - frontend
+    networks:
+      - front_bot_network
+
+networks:
+  front_bot_network:
+    driver: bridge
+
